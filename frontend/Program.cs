@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddDaprClient();
+
 // note: for this demo we're using the DAPR_HTTP_PORT environment variable to decide if we're using Dapr or not
 var daprPort = Environment.GetEnvironmentVariable("DAPR_HTTP_PORT");
 if (String.IsNullOrEmpty(daprPort))
@@ -16,7 +18,7 @@ if (String.IsNullOrEmpty(daprPort))
     Console.WriteLine("NOT USING DAPR");
     builder.Services.AddHttpClient<IEventCatalogService, EventCatalogService>((sp, c) =>
         c.BaseAddress = new Uri(sp.GetService<IConfiguration>()?["ApiConfigs:EventCatalog:Uri"] ?? throw new InvalidOperationException("Missing config")));
-    builder.Services.AddSingleton<IShoppingBasketService, InMemoryShoppingBasketService>();
+    builder.Services.AddScoped<IShoppingBasketService, DaprClientStateStoreShoppingBasket>();
     builder.Services.AddHttpClient<IOrderSubmissionService, HttpOrderSubmissionService>((sp, c) =>
         c.BaseAddress = new Uri(sp.GetService<IConfiguration>()?["ApiConfigs:Ordering:Uri"] ?? throw new InvalidOperationException("Missing config")));
 }
